@@ -22,7 +22,7 @@ Resolve Splash Studio 是一个 Windows 原生 GUI 工具，用于从 DaVinci Re
 - 可选清除已经失效的 Authenticode 安全目录
 - 生成 JSON 清单和 SHA-256
 - 支持直接应用、自动备份和一键恢复
-
+![描述](assets/UI_preview.png)
 ## 二、运行要求
 
 - Windows 10 / 11
