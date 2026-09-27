@@ -2,6 +2,7 @@
 
 Resolve Splash Studio 是一个 Windows 原生 GUI 工具，用于从 DaVinci Resolve 的 `Resolve.exe` 中定位内嵌 PNG 启动图，并以“文件总长度完全不变”的方式做精确替换。
 
+![描述](assets/测试图.png)
 ## 一、功能
 
 - 自动定位 `C:\Program Files\Blackmagic Design\DaVinci Resolve\Resolve.exe`
