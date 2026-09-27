@@ -32,7 +32,7 @@ Resolve Splash Studio 是一个 Windows 原生 GUI 工具，用于从 DaVinci Re
 ## 三、推荐操作流程
 
 1. 完全退出 DaVinci Resolve。
-2. 运行 `ResolveSplashStudio.exe`。
+2. 使用管理员权限运行 `ResolveSplashStudio.exe`。
 3. 确认 `Resolve.exe` 路径，点击“扫描”。
 4. 保持勾选“仅显示疑似启动图”。
 5. 选择要替换的资源，例如 `2220 x 980`。
@@ -63,14 +63,6 @@ Resolve Splash Studio 是一个 Windows 原生 GUI 工具，用于从 DaVinci Re
 - 所有 PNG chunk CRC 正确
 - PE Header Checksum 用 Windows `imagehlp.dll` 重新计算并复核
 - 生成原文件与输出文件的 SHA-256 清单
-
-必须说明的限制：
-
-- 原始 DaVinci Resolve 由 Blackmagic 使用私钥进行 Authenticode 签名。
-- 修改 EXE 内容后，任何人都无法在不持有 Blackmagic 私钥的情况下重新生成相同的厂商签名。
-- 默认保留证书区时，Windows 会把输出标记为 `HashMismatch`。
-- 勾选“清除失效 Authenticode 目录”后，Windows 会显示为 `NotSigned`。
-- 两种方式都不会影响 PE 文件可以正常启动，但都不是“伪造原厂商签名”。
 - 工具不会修改许可证、激活状态或 Studio 功能，只替换匹配的 PNG 字节。
 
 ## 五、恢复原版
@@ -80,6 +72,7 @@ Resolve Splash Studio 是一个 Windows 原生 GUI 工具，用于从 DaVinci Re
   `Resolve.exe.original.bak`
   复制回：
   `Resolve.exe`
+  但保险起见推荐手动备份exe文件
 
 ## 六、源码
 
