@@ -13,7 +13,8 @@ Resolve Splash Studio 是一个 Windows 原生 GUI 工具，用于从 DaVinci Re
   - `2220 x 980`
   - `1110 x 490`
   - `1070 x 450`
-- 支持 Shift/Ctrl 多选、鼠标拖拽框选、全选同尺寸
+- 不影响软件本体的许可证信息
+- 支持 Shift/Ctrl 多选、鼠标拖拽框选、全选同尺寸进行替换
 - 同尺寸启动图可一次批量替换，自动分别适配每个资源的原始长度
 - 原图和新图双预览
 - 强制要求新 PNG 与原 PNG 宽高完全一致
@@ -28,11 +29,11 @@ Resolve Splash Studio 是一个 Windows 原生 GUI 工具，用于从 DaVinci Re
 
 - Windows 10 / 11
 - .NET Framework 4.8（Windows 10/11 通常已内置）
-- 自备以下图尺寸的图像，如用Photoshop制作，请在导出时选择导出较小文件
+- 自备以下图尺寸的PNG图像，如用Photoshop制作，请在导出时选择导出较小文件
   - `2220 x 980`
   - `1110 x 490`
   - `1070 x 450`
-
+- 如果需要替换logo请将“仅显示疑似启动图”的复选框取消勾选再次扫描，达芬奇采用了大量的图片素材，这些都是可以替换的
 ## 三、推荐操作流程
 
 1. 完全退出 DaVinci Resolve。
