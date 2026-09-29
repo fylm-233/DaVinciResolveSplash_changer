@@ -1,12 +1,125 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using ResolveSplashStudio;
+
+public static class Locale
+{
+    public static bool _isChinese;
+    private static Dictionary<string, string> _zh = new Dictionary<string, string>();
+    private static Dictionary<string, string> _en = new Dictionary<string, string>();
+
+    static Locale()
+    {
+        _zh["title"] = "Resolve Splash Studio - 达芬奇启动图精确替换工具";
+        _zh["lblExe"] = "Resolve.exe";
+        _zh["btnBrowse"] = "浏览...";
+        _zh["btnScan"] = "扫描";
+        _zh["lblHeaderInfo"] = "尚未扫描";
+        _zh["filter"] = "筛选";
+        _zh["minSide"] = "最小边长";
+        _zh["chkSplashOnly"] = "仅显示疑似启动图";
+        _zh["chkLogoOnly"] = "仅显示疑似 Logo";
+        _zh["btnSelectSameSize"] = "全选同尺寸";
+        _zh["hint"] = "支持 Shift/Ctrl 多选，也可按住左键框选；批量替换要求所选尺寸一致。";
+        _zh["colIndex"] = "#";
+        _zh["colSize"] = "尺寸";
+        _zh["colBytes"] = "字节";
+        _zh["colOffset"] = "文件偏移";
+        _zh["colColor"] = "颜色";
+        _zh["colJudgement"] = "判定";
+        _zh["splashCandidate"] = "启动图候选";
+        _zh["logoCandidate"] = "Logo 候选";
+        _zh["otherPng"] = "其他 PNG";
+        _zh["gbOriginal"] = "原启动图预览";
+        _zh["gbNew"] = "新图片预览";
+        _zh["lblOriginalInfo"] = "未选择资源";
+        _zh["btnChooseReplacement"] = "选择新的 PNG...";
+        _zh["btnExportOriginal"] = "导出原始图片";
+        _zh["lblNewInfo"] = "尚未选择替换图";
+        _zh["gbLog"] = "处理日志";
+        _zh["chkPatchCopies"] = "同时替换内容完全相同的副本";
+        _zh["chkClearSignature"] = "清除失效 Authenticode 目录（非必需）";
+        _zh["btnCreatePatch"] = "生成补丁副本";
+        _zh["btnApply"] = "直接应用到 Resolve.exe";
+        _zh["btnRestore"] = "恢复原始备份";
+        _zh["ready"] = "就绪";
+        _zh["scanning"] = "正在扫描嵌入 PNG...";
+        _zh["notScanned"] = "尚未扫描";
+        _zh["readyStatus"] = "就绪";
+        _zh["noResource"] = "未选择资源";
+        _zh["noReplacement"] = "尚未选择替换图";
+        _zh["replacementUnavailable"] = "替换图不可用";
+
+        _en["title"] = "Resolve Splash Studio - DaVinci Resolve Splash Image Patcher";
+        _en["lblExe"] = "Resolve.exe";
+        _en["btnBrowse"] = "Browse...";
+        _en["btnScan"] = "Scan";
+        _en["lblHeaderInfo"] = "Not scanned";
+        _en["filter"] = "Filter";
+        _en["minSide"] = "Min side";
+        _en["chkSplashOnly"] = "Show suspected splash only";
+        _en["chkLogoOnly"] = "Show suspected Logo only";
+        _en["btnSelectSameSize"] = "Select same size";
+        _en["hint"] = "Shift/Ctrl multi-select, drag to box-select; batch replace requires same dimensions.";
+        _en["colIndex"] = "#";
+        _en["colSize"] = "Size";
+        _en["colBytes"] = "Bytes";
+        _en["colOffset"] = "File offset";
+        _en["colColor"] = "Color";
+        _en["colJudgement"] = "Judgement";
+        _en["splashCandidate"] = "Splash candidate";
+        _en["logoCandidate"] = "Logo candidate";
+        _en["otherPng"] = "Other PNG";
+        _en["gbOriginal"] = "Original preview";
+        _en["gbNew"] = "New image preview";
+        _en["lblOriginalInfo"] = "No resource selected";
+        _en["btnChooseReplacement"] = "Choose new PNG...";
+        _en["btnExportOriginal"] = "Export original";
+        _en["lblNewInfo"] = "No replacement chosen";
+        _en["gbLog"] = "Log";
+        _en["chkPatchCopies"] = "Also replace identical copies";
+        _en["chkClearSignature"] = "Clear Authenticode directory (optional)";
+        _en["btnCreatePatch"] = "Create patched copy";
+        _en["btnApply"] = "Apply to Resolve.exe";
+        _en["btnRestore"] = "Restore backup";
+        _en["ready"] = "Ready";
+        _en["scanning"] = "Scanning embedded PNGs...";
+        _en["notScanned"] = "Not scanned";
+        _en["readyStatus"] = "Ready";
+        _en["noResource"] = "No resource selected";
+        _en["noReplacement"] = "No replacement chosen";
+        _en["replacementUnavailable"] = "Replacement unavailable";
+    }
+
+    public static void Init()
+    {
+        try
+        {
+            _isChinese = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName == "zh";
+        }
+        catch
+        {
+            _isChinese = false;
+        }
+    }
+
+    public static string T(string key)
+    {
+        Dictionary<string, string> dict = _isChinese ? _zh : _en;
+        string value;
+        if (dict.TryGetValue(key, out value)) return value;
+        return key;
+    }
+
+    public static bool IsChinese { get { return _isChinese; } }
+}
 
 public sealed class MainForm : Form
 {
@@ -17,12 +130,20 @@ public sealed class MainForm : Form
     private TextBox txtFilter;
     private NumericUpDown numMin;
     private CheckBox chkSplashOnly;
+    private CheckBox chkLogoOnly;
+    private Label lblFilter;
+    private Label lblMin;
+    private Label hint;
     private ListView lvAssets;
     private PictureBox picOriginal;
     private PictureBox picNew;
     private Label lblOriginalInfo;
     private Label lblNewInfo;
     private Button btnChooseReplacement;
+    private Button btnExportOriginal;
+    private GroupBox gbOriginal;
+    private GroupBox gbNew;
+    private GroupBox gbLog;
     private CheckBox chkPatchCopies;
     private CheckBox chkClearSignature;
     private Button btnCreatePatch;
@@ -52,7 +173,8 @@ public sealed class MainForm : Form
 
     public MainForm()
     {
-        Text = "Resolve Splash Studio - 达芬奇启动图精确替换工具";
+        Locale.Init();
+        Text = Locale.T("title");
         StartPosition = FormStartPosition.CenterScreen;
         MinimumSize = new Size(1050, 680);
         Size = new Size(1320, 850);
@@ -63,7 +185,7 @@ public sealed class MainForm : Form
 
         string found = ResolveLocator.Find();
         if (!String.IsNullOrEmpty(found)) txtExe.Text = found;
-        Log("就绪。请选择 Resolve.exe 后点击“扫描”。");
+        Log(Locale.T("ready") + ". " + (Locale.IsChinese ? "请选择 Resolve.exe 后点击[扫描]。" : "Select Resolve.exe and click Scan."));
         UpdateButtons();
     }
 
@@ -76,7 +198,7 @@ public sealed class MainForm : Form
         Controls.Add(top);
 
         Label lblExe = new Label();
-        lblExe.Text = "Resolve.exe";
+        lblExe.Text = Locale.T("lblExe");
         lblExe.AutoSize = true;
         lblExe.Location = new Point(12, 13);
         top.Controls.Add(lblExe);
@@ -88,7 +210,7 @@ public sealed class MainForm : Form
         top.Controls.Add(txtExe);
 
         btnBrowse = new Button();
-        btnBrowse.Text = "浏览...";
+        btnBrowse.Text = Locale.T("btnBrowse");
         btnBrowse.Location = new Point(916, 8);
         btnBrowse.Size = new Size(85, 28);
         btnBrowse.Anchor = AnchorStyles.Top | AnchorStyles.Right;
@@ -96,7 +218,7 @@ public sealed class MainForm : Form
         top.Controls.Add(btnBrowse);
 
         btnScan = new Button();
-        btnScan.Text = "扫描";
+        btnScan.Text = Locale.T("btnScan");
         btnScan.Location = new Point(1008, 8);
         btnScan.Size = new Size(85, 28);
         btnScan.Anchor = AnchorStyles.Top | AnchorStyles.Right;
@@ -109,7 +231,7 @@ public sealed class MainForm : Form
         lblHeaderInfo.Size = new Size(1000, 24);
         lblHeaderInfo.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         lblHeaderInfo.ForeColor = Color.DimGray;
-        lblHeaderInfo.Text = "尚未扫描";
+        lblHeaderInfo.Text = Locale.T("notScanned");
         top.Controls.Add(lblHeaderInfo);
 
         SplitContainer split = new SplitContainer();
@@ -132,7 +254,7 @@ public sealed class MainForm : Form
 
         StatusStrip status = new StatusStrip();
         status.SizingGrip = false;
-        statusLabel = new ToolStripStatusLabel("就绪");
+        statusLabel = new ToolStripStatusLabel(Locale.T("ready"));
         statusLabel.Spring = true;
         statusLabel.TextAlign = ContentAlignment.MiddleLeft;
         progressBar = new ToolStripProgressBar();
@@ -150,8 +272,8 @@ public sealed class MainForm : Form
         filters.Height = 72;
         parent.Controls.Add(filters);
 
-        Label lblFilter = new Label();
-        lblFilter.Text = "筛选";
+        lblFilter = new Label();
+        lblFilter.Text = Locale.T("filter");
         lblFilter.AutoSize = true;
         lblFilter.Location = new Point(10, 13);
         filters.Controls.Add(lblFilter);
@@ -162,8 +284,8 @@ public sealed class MainForm : Form
         txtFilter.TextChanged += delegate { ApplyFilter(); };
         filters.Controls.Add(txtFilter);
 
-        Label lblMin = new Label();
-        lblMin.Text = "最小边长";
+        lblMin = new Label();
+        lblMin.Text = Locale.T("minSide");
         lblMin.AutoSize = true;
         lblMin.Location = new Point(330, 13);
         filters.Controls.Add(lblMin);
@@ -173,27 +295,54 @@ public sealed class MainForm : Form
         numMin.Width = 70;
         numMin.Minimum = 32;
         numMin.Maximum = 10000;
-        numMin.Value = 500;
+        numMin.Value = 300;
         numMin.ValueChanged += delegate { ApplyFilter(); };
         filters.Controls.Add(numMin);
 
         chkSplashOnly = new CheckBox();
-        chkSplashOnly.Text = "仅显示疑似启动图";
+        chkSplashOnly.Text = Locale.T("chkSplashOnly");
         chkSplashOnly.Location = new Point(480, 9);
         chkSplashOnly.Width = 150;
         chkSplashOnly.Checked = true;
-        chkSplashOnly.CheckedChanged += delegate { ApplyFilter(); };
+        chkSplashOnly.CheckedChanged += delegate
+        {
+            if (chkSplashOnly.Checked && chkLogoOnly.Checked) chkLogoOnly.Checked = false;
+            ApplyFilter();
+        };
         filters.Controls.Add(chkSplashOnly);
 
+        chkLogoOnly = new CheckBox();
+        chkLogoOnly.Text = Locale.T("chkLogoOnly");
+        chkLogoOnly.Location = new Point(480, 30);
+        chkLogoOnly.Width = 150;
+        chkLogoOnly.Checked = false;
+        chkLogoOnly.CheckedChanged += delegate
+        {
+            if (chkLogoOnly.Checked && chkSplashOnly.Checked) chkSplashOnly.Checked = false;
+            ApplyFilter();
+        };
+        filters.Controls.Add(chkLogoOnly);
+
         btnSelectSameSize = new Button();
-        btnSelectSameSize.Text = "全选同尺寸";
+        btnSelectSameSize.Text = Locale.T("btnSelectSameSize");
         btnSelectSameSize.Location = new Point(636, 7);
         btnSelectSameSize.Size = new Size(108, 28);
         btnSelectSameSize.Click += delegate { SelectSameSize(); };
         filters.Controls.Add(btnSelectSameSize);
 
-        Label hint = new Label();
-        hint.Text = "支持 Shift/Ctrl 多选，也可按住左键框选；批量替换要求所选尺寸一致。";
+        Button btnLang = new Button();
+        btnLang.Text = "English/Chinese";
+        btnLang.Location = new Point(750, 7);
+        btnLang.Size = new Size(120, 28);
+        btnLang.Click += delegate
+        {
+            Locale._isChinese = !Locale._isChinese;
+            RefreshUILanguage();
+        };
+        filters.Controls.Add(btnLang);
+
+        hint = new Label();
+        hint.Text = Locale.T("hint");
         hint.ForeColor = Color.DimGray;
         hint.AutoSize = false;
         hint.Location = new Point(10, 42);
@@ -207,12 +356,12 @@ public sealed class MainForm : Form
         lvAssets.GridLines = true;
         lvAssets.HideSelection = false;
         lvAssets.MultiSelect = true;
-        lvAssets.Columns.Add("#", 52, HorizontalAlignment.Right);
-        lvAssets.Columns.Add("尺寸", 104, HorizontalAlignment.Left);
-        lvAssets.Columns.Add("字节", 92, HorizontalAlignment.Right);
-        lvAssets.Columns.Add("文件偏移", 120, HorizontalAlignment.Left);
-        lvAssets.Columns.Add("颜色", 78, HorizontalAlignment.Left);
-        lvAssets.Columns.Add("判定", 110, HorizontalAlignment.Left);
+        lvAssets.Columns.Add(Locale.T("colIndex"), 52, HorizontalAlignment.Right);
+        lvAssets.Columns.Add(Locale.T("colSize"), 104, HorizontalAlignment.Left);
+        lvAssets.Columns.Add(Locale.T("colBytes"), 92, HorizontalAlignment.Right);
+        lvAssets.Columns.Add(Locale.T("colOffset"), 120, HorizontalAlignment.Left);
+        lvAssets.Columns.Add(Locale.T("colColor"), 78, HorizontalAlignment.Left);
+        lvAssets.Columns.Add(Locale.T("colJudgement"), 110, HorizontalAlignment.Left);
         lvAssets.SelectedIndexChanged += delegate { OnAssetSelected(); };
         lvAssets.DoubleClick += delegate { ReloadSelectedPreview(); };
         lvAssets.MouseDown += delegate(object sender, MouseEventArgs e) { OnListMouseDown(e); };
@@ -238,8 +387,8 @@ public sealed class MainForm : Form
         layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         parent.Controls.Add(layout);
 
-        GroupBox gbOriginal = new GroupBox();
-        gbOriginal.Text = "原启动图预览";
+        gbOriginal = new GroupBox();
+        gbOriginal.Text = Locale.T("gbOriginal");
         gbOriginal.Dock = DockStyle.Fill;
         picOriginal = new PictureBox();
         picOriginal.Dock = DockStyle.Fill;
@@ -248,8 +397,8 @@ public sealed class MainForm : Form
         gbOriginal.Controls.Add(picOriginal);
         layout.Controls.Add(gbOriginal, 0, 0);
 
-        GroupBox gbNew = new GroupBox();
-        gbNew.Text = "新图片预览";
+        gbNew = new GroupBox();
+        gbNew.Text = Locale.T("gbNew");
         gbNew.Dock = DockStyle.Fill;
         picNew = new PictureBox();
         picNew.Dock = DockStyle.Fill;
@@ -263,18 +412,26 @@ public sealed class MainForm : Form
         lblOriginalInfo.Height = 42;
         lblOriginalInfo.Dock = DockStyle.Top;
         lblOriginalInfo.ForeColor = Color.DimGray;
-        lblOriginalInfo.Text = "未选择资源";
+        lblOriginalInfo.Text = Locale.T("lblOriginalInfo");
         layout.Controls.Add(lblOriginalInfo, 0, 2);
 
         Panel choosePanel = new Panel();
         choosePanel.Height = 40;
         choosePanel.Dock = DockStyle.Top;
         btnChooseReplacement = new Button();
-        btnChooseReplacement.Text = "选择新的 PNG...";
+        btnChooseReplacement.Text = Locale.T("btnChooseReplacement");
         btnChooseReplacement.Location = new Point(0, 5);
         btnChooseReplacement.Size = new Size(150, 30);
         btnChooseReplacement.Click += delegate { ChooseReplacement(); };
         choosePanel.Controls.Add(btnChooseReplacement);
+
+        btnExportOriginal = new Button();
+        btnExportOriginal.Text = Locale.T("btnExportOriginal");
+        btnExportOriginal.Location = new Point(160, 5);
+        btnExportOriginal.Size = new Size(130, 30);
+        btnExportOriginal.Click += delegate { ExportOriginal(); };
+        btnExportOriginal.Enabled = false;
+        choosePanel.Controls.Add(btnExportOriginal);
         layout.Controls.Add(choosePanel, 0, 3);
 
         lblNewInfo = new Label();
@@ -282,11 +439,11 @@ public sealed class MainForm : Form
         lblNewInfo.Height = 42;
         lblNewInfo.Dock = DockStyle.Top;
         lblNewInfo.ForeColor = Color.DimGray;
-        lblNewInfo.Text = "尚未选择替换图";
+        lblNewInfo.Text = Locale.T("lblNewInfo");
         layout.Controls.Add(lblNewInfo, 0, 4);
 
-        GroupBox gbLog = new GroupBox();
-        gbLog.Text = "处理日志";
+        gbLog = new GroupBox();
+        gbLog.Text = Locale.T("gbLog");
         gbLog.Dock = DockStyle.Fill;
         txtLog = new TextBox();
         txtLog.Dock = DockStyle.Fill;
@@ -301,35 +458,35 @@ public sealed class MainForm : Form
         actions.Height = 78;
         actions.Dock = DockStyle.Bottom;
         chkPatchCopies = new CheckBox();
-        chkPatchCopies.Text = "同时替换内容完全相同的副本";
+        chkPatchCopies.Text = Locale.T("chkPatchCopies");
         chkPatchCopies.Location = new Point(0, 3);
         chkPatchCopies.Width = 260;
         chkPatchCopies.Checked = true;
         actions.Controls.Add(chkPatchCopies);
 
         chkClearSignature = new CheckBox();
-        chkClearSignature.Text = "清除失效 Authenticode 目录（非必需）";
+        chkClearSignature.Text = Locale.T("chkClearSignature");
         chkClearSignature.Location = new Point(0, 26);
         chkClearSignature.Width = 310;
         chkClearSignature.Checked = false;
         actions.Controls.Add(chkClearSignature);
 
         btnCreatePatch = new Button();
-        btnCreatePatch.Text = "生成补丁副本";
+        btnCreatePatch.Text = Locale.T("btnCreatePatch");
         btnCreatePatch.Location = new Point(0, 48);
         btnCreatePatch.Size = new Size(130, 28);
         btnCreatePatch.Click += delegate { CreatePatch(false); };
         actions.Controls.Add(btnCreatePatch);
 
         btnApply = new Button();
-        btnApply.Text = "直接应用到 Resolve.exe";
+        btnApply.Text = Locale.T("btnApply");
         btnApply.Location = new Point(140, 48);
         btnApply.Size = new Size(170, 28);
         btnApply.Click += delegate { ApplyPatch(); };
         actions.Controls.Add(btnApply);
 
         btnRestore = new Button();
-        btnRestore.Text = "恢复原始备份";
+        btnRestore.Text = Locale.T("btnRestore");
         btnRestore.Location = new Point(320, 48);
         btnRestore.Size = new Size(130, 28);
         btnRestore.Click += delegate { RestoreBackup(); };
@@ -341,6 +498,13 @@ public sealed class MainForm : Form
         if (a.Width < 1000 || a.Height < 450) return false;
         double ratio = (double)a.Width / (double)a.Height;
         return ratio >= 2.15 && ratio <= 2.42;
+    }
+
+    private bool IsSuspectedLogo(PngAsset a)
+    {
+        if (a.Width < 100 || a.Height < 20) return false;
+        double ratio = (double)a.Width / (double)a.Height;
+        return ratio >= 3.8 && ratio <= 4.3;
     }
 
     private bool SelectionIsSameSize()
@@ -362,6 +526,7 @@ public sealed class MainForm : Form
         string filter = txtFilter == null ? String.Empty : txtFilter.Text.Trim().ToLowerInvariant();
         int min = numMin == null ? 500 : (int)numMin.Value;
         bool splashOnly = chkSplashOnly != null && chkSplashOnly.Checked;
+        bool logoOnly = chkLogoOnly != null && chkLogoOnly.Checked;
         lvAssets.BeginUpdate();
         try
         {
@@ -370,8 +535,10 @@ public sealed class MainForm : Form
             {
                 PngAsset a = allAssets[i];
                 if (Math.Max(a.Width, a.Height) < min) continue;
-                bool suspected = IsSuspectedSplash(a);
-                if (splashOnly && !suspected) continue;
+                bool suspectedSplash = IsSuspectedSplash(a);
+                bool suspectedLogo = IsSuspectedLogo(a);
+                if (splashOnly && !suspectedSplash) continue;
+                if (logoOnly && !suspectedLogo) continue;
                 if (filter.Length > 0)
                 {
                     string haystack = (a.Index + " " + a.Dimensions + " " + a.Length + " " + a.OffsetHex + " " + a.ColorTypeText).ToLowerInvariant();
@@ -382,7 +549,11 @@ public sealed class MainForm : Form
                 item.SubItems.Add(a.Length.ToString("N0", CultureInfo.InvariantCulture));
                 item.SubItems.Add(a.OffsetHex);
                 item.SubItems.Add(a.ColorTypeText);
-                item.SubItems.Add(suspected ? "启动图候选" : "其他 PNG");
+                string judgement;
+                if (suspectedSplash) judgement = Locale.T("splashCandidate");
+                else if (suspectedLogo) judgement = Locale.T("logoCandidate");
+                else judgement = Locale.T("otherPng");
+                item.SubItems.Add(judgement);
                 item.Tag = a;
                 lvAssets.Items.Add(item);
             }
@@ -412,7 +583,7 @@ public sealed class MainForm : Form
             selectedAsset = null;
             selectedOriginalBytes = null;
             SetPicture(picOriginal, null);
-            lblOriginalInfo.Text = "未选择资源";
+            lblOriginalInfo.Text = Locale.T("lblOriginalInfo");
             UpdateButtons();
             return;
         }
@@ -448,15 +619,15 @@ public sealed class MainForm : Form
             else
             {
                 lblOriginalInfo.Text = String.Format(CultureInfo.InvariantCulture,
-                    "已选 {0} 项，但尺寸不一致：{1}、{2} 等。批量替换已禁用。",
+                    Locale.IsChinese ? "已选 {0} 项，但尺寸不一致：{1}、{2} 等。批量替换已禁用。" : "Selected {0} items, but dimensions differ: {1}, {2}, etc. Batch replace disabled.",
                     assets.Count, assets[0].Dimensions, assets.Count > 1 ? assets[1].Dimensions : "-");
             }
-            Log("选择 " + assets.Count + " 个资源，首个 #" + asset.Index + " " + asset.Dimensions + " @ " + asset.OffsetHex);
+            Log((Locale.IsChinese ? "选择 " : "Selected ") + assets.Count + (Locale.IsChinese ? " 个资源，首个 #" : " resources, first #") + asset.Index + " " + asset.Dimensions + " @ " + asset.OffsetHex);
         }
         catch (Exception ex)
         {
             selectedOriginalBytes = null;
-            MessageBox.Show(this, ex.Message, "读取资源失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(this, ex.Message, Locale.IsChinese ? "读取资源失败" : "Failed to read resource", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         UpdateButtons();
     }
@@ -601,14 +772,44 @@ public sealed class MainForm : Form
         replacementByLength.Clear();
         replacementPath = null;
         SetPicture(picNew, null);
-        lblNewInfo.Text = "尚未选择替换图";
+        lblNewInfo.Text = Locale.T("lblNewInfo");
         UpdateButtons();
+    }
+
+    private void ExportOriginal()
+    {
+        if (selectedAsset == null || selectedOriginalBytes == null)
+        {
+            MessageBox.Show(this, Locale.IsChinese ? "请先选择一个原始 PNG 资源。" : "Please select an original PNG resource first.",
+                Locale.IsChinese ? "未选择资源" : "No resource selected", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+        using (SaveFileDialog dlg = new SaveFileDialog())
+        {
+            dlg.Title = Locale.T("btnExportOriginal");
+            dlg.Filter = "PNG 图片|*.png";
+            dlg.FileName = "export_" + selectedAsset.Index + "_" + selectedAsset.Width + "x" + selectedAsset.Height + ".png";
+            if (dlg.ShowDialog(this) != DialogResult.OK) return;
+            try
+            {
+                File.WriteAllBytes(dlg.FileName, selectedOriginalBytes);
+                Log((Locale.IsChinese ? "已导出原始图片: " : "Exported original image: ") + dlg.FileName);
+                MessageBox.Show(this,
+                    Locale.IsChinese ? "已导出到:\r\n" + dlg.FileName : "Exported to:\r\n" + dlg.FileName,
+                    Locale.IsChinese ? "导出成功" : "Export successful", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                Log((Locale.IsChinese ? "导出失败: " : "Export failed: ") + ex.Message);
+                MessageBox.Show(this, ex.Message, Locale.IsChinese ? "导出失败" : "Export failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
     }
     private void BrowseExe()
     {
         using (OpenFileDialog dlg = new OpenFileDialog())
         {
-            dlg.Title = "选择 DaVinci Resolve 主程序";
+            dlg.Title = Locale.IsChinese ? "选择 DaVinci Resolve 主程序" : "Select DaVinci Resolve executable";
             dlg.Filter = "Resolve.exe|Resolve.exe|可执行文件|*.exe|所有文件|*.*";
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
@@ -619,7 +820,7 @@ public sealed class MainForm : Form
                 selectedAssets.Clear();
                 ClearReplacement();
                 ApplyFilter();
-                Log("已选择文件: " + dlg.FileName);
+                Log((Locale.IsChinese ? "已选择文件: " : "Selected file: ") + dlg.FileName);
             }
         }
     }
@@ -630,12 +831,13 @@ public sealed class MainForm : Form
         string path = txtExe.Text.Trim().Trim('"');
         if (!File.Exists(path))
         {
-            MessageBox.Show(this, "找不到 Resolve.exe，请先选择正确路径。", "路径错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, Locale.IsChinese ? "找不到 Resolve.exe，请先选择正确路径。" : "Resolve.exe not found. Please select the correct path.",
+                Locale.IsChinese ? "路径错误" : "Path error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
         scanning = true;
-        SetBusy(true, "正在扫描嵌入 PNG...");
-        Log("开始扫描: " + path);
+        SetBusy(true, Locale.T("scanning"));
+        Log((Locale.IsChinese ? "开始扫描: " : "Starting scan: ") + path);
         BackgroundWorker worker = new BackgroundWorker();
         worker.DoWork += delegate(object sender, DoWorkEventArgs e)
         {
@@ -658,11 +860,11 @@ public sealed class MainForm : Form
         worker.RunWorkerCompleted += delegate(object sender, RunWorkerCompletedEventArgs e)
         {
             scanning = false;
-            SetBusy(false, "就绪");
+            SetBusy(false, Locale.T("ready"));
             if (e.Error != null)
             {
-                Log("扫描失败: " + e.Error.Message);
-                MessageBox.Show(this, e.Error.Message, "扫描失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Log((Locale.IsChinese ? "扫描失败: " : "Scan failed: ") + e.Error.Message);
+                MessageBox.Show(this, e.Error.Message, Locale.IsChinese ? "扫描失败" : "Scan failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             ScanPayload payload = (ScanPayload)e.Result;
@@ -679,7 +881,7 @@ public sealed class MainForm : Form
                 currentPe.StoredChecksum,
                 currentPe.HasSecurityDirectory ? "存在（修改后会失效）" : "无");
             ApplyFilter();
-            Log("扫描完成，找到 " + allAssets.Count + " 个 PNG 资源。");
+            Log((Locale.IsChinese ? "扫描完成，找到 " : "Scan complete, found ") + allAssets.Count + (Locale.IsChinese ? " 个 PNG 资源。" : " PNG resources."));
             UpdateButtons();
         };
         worker.RunWorkerAsync();
@@ -697,6 +899,7 @@ public sealed class MainForm : Form
         btnScan.Enabled = !busy;
         txtExe.Enabled = !busy;
         btnChooseReplacement.Enabled = !busy && selectedAssets.Count > 0 && SelectionIsSameSize();
+        btnExportOriginal.Enabled = !busy && selectedAsset != null && selectedOriginalBytes != null;
         btnCreatePatch.Enabled = !busy && replacementOriginalBytes != null && replacementByLength.Count > 0;
         btnApply.Enabled = !busy && replacementOriginalBytes != null && replacementByLength.Count > 0;
         progressBar.Visible = busy;
@@ -710,9 +913,10 @@ public sealed class MainForm : Form
         bool hasAsset = selectedAssets.Count > 0 && selectedOriginalBytes != null && SelectionIsSameSize();
         bool hasReplacement = replacementByLength.Count > 0 && replacementOriginalBytes != null;
         btnChooseReplacement.Enabled = !scanning && hasAsset;
+        btnExportOriginal.Enabled = !scanning && selectedAsset != null && selectedOriginalBytes != null;
         btnCreatePatch.Enabled = !scanning && hasReplacement;
         btnApply.Enabled = !scanning && hasReplacement;
-        btnRestore.Enabled = !scanning && txtExe != null && File.Exists(txtExe.Text.Trim().Trim('"') + ".original.bak");
+        btnRestore.Enabled = !scanning && txtExe != null && File.Exists(GetBackupPath());
     }
 
     private void Log(string text)
@@ -723,23 +927,40 @@ public sealed class MainForm : Form
         txtLog.SelectionStart = txtLog.TextLength;
         txtLog.ScrollToCaret();
     }
+
+    private string GetBackupDir()
+    {
+        string exeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+        string backupDir = Path.Combine(exeDir, "backup");
+        if (!Directory.Exists(backupDir)) Directory.CreateDirectory(backupDir);
+        return backupDir;
+    }
+
+    private string GetBackupPath()
+    {
+        string source = txtExe.Text.Trim().Trim('"');
+        string fileName = Path.GetFileName(source);
+        return Path.Combine(GetBackupDir(), fileName + ".original.bak");
+    }
     private void ChooseReplacement()
     {
         if (selectedAssets.Count == 0 || selectedOriginalBytes == null)
         {
-            MessageBox.Show(this, "请先从列表中选择一个或多个原始 PNG 资源。", "未选择资源", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this, Locale.IsChinese ? "请先从列表中选择一个或多个原始 PNG 资源。" : "Please select one or more original PNG resources from the list first.",
+                Locale.IsChinese ? "未选择资源" : "No resource selected", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
         if (!SelectionIsSameSize())
         {
-            MessageBox.Show(this, "批量替换只支持尺寸完全一致的资源。请重新选择相同尺寸的启动图。", "尺寸不一致", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, Locale.IsChinese ? "批量替换只支持尺寸完全一致的资源。请重新选择相同尺寸的启动图。" : "Batch replace only supports resources with exactly the same dimensions.",
+                Locale.IsChinese ? "尺寸不一致" : "Dimensions mismatch", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
         PngAsset first = selectedAssets[0];
         using (OpenFileDialog dlg = new OpenFileDialog())
         {
-            dlg.Title = "选择新的 PNG 启动图";
+            dlg.Title = Locale.IsChinese ? "选择新的 PNG 启动图" : "Select new PNG splash image";
             dlg.Filter = "PNG 图片|*.png";
             if (dlg.ShowDialog(this) != DialogResult.OK) return;
             try
@@ -752,7 +973,7 @@ public sealed class MainForm : Form
                 if (packet.Width != first.Width || packet.Height != first.Height)
                 {
                     throw new Exception(String.Format(CultureInfo.InvariantCulture,
-                        "新图尺寸必须与所选原图完全一致。原图 {0}x{1}，当前文件 {2}x{3}。",
+                        Locale.IsChinese ? "新图尺寸必须与所选原图完全一致。原图 {0}x{1}，当前文件 {2}x{3}。" : "New image must match original dimensions exactly. Original {0}x{1}, current {2}x{3}.",
                         first.Width, first.Height, packet.Width, packet.Height));
                 }
 
@@ -768,7 +989,7 @@ public sealed class MainForm : Form
                 }
                 if (fitErrors.Count > 0)
                 {
-                    throw new Exception("有资源无法精确适配，整个批量操作已取消：\r\n\r\n" + String.Join("\r\n", fitErrors.ToArray()));
+                    throw new Exception((Locale.IsChinese ? "有资源无法精确适配，整个批量操作已取消：\r\n\r\n" : "Some resources cannot be precisely fitted; batch operation cancelled:\r\n\r\n") + String.Join("\r\n", fitErrors.ToArray()));
                 }
 
                 replacementOriginalBytes = raw;
@@ -785,10 +1006,10 @@ public sealed class MainForm : Form
                     if (selectedAssets[i].Length > maxLength) maxLength = selectedAssets[i].Length;
                 }
                 lblNewInfo.Text = String.Format(CultureInfo.InvariantCulture,
-                    "{0} | {1:N0} 字节 | {2}x{3}\r\n将批量替换 {4} 张，覆盖 {5} 种原始长度（{6:N0}..{7:N0} 字节）",
+                    "{0} | {1:N0} bytes | {2}x{3}\r\nBatch replacing {4} assets, covering {5} original lengths ({6:N0}..{7:N0} bytes)",
                     Path.GetFileName(dlg.FileName), raw.Length, packet.Width, packet.Height,
                     selectedAssets.Count, fittedByLength.Count, minLength, maxLength);
-                Log("已选择批量替换图: " + dlg.FileName + "，将替换 " + selectedAssets.Count + " 张同尺寸启动图。");
+                Log((Locale.IsChinese ? "已选择批量替换图: " : "Selected batch replacement: ") + dlg.FileName + (Locale.IsChinese ? "，将替换 " : ", will replace ") + selectedAssets.Count + (Locale.IsChinese ? " 张同尺寸启动图。" : " same-size splash images."));
                 UpdateButtons();
             }
             catch (Exception ex)
@@ -798,8 +1019,8 @@ public sealed class MainForm : Form
                 replacementByLength.Clear();
                 replacementPath = null;
                 SetPicture(picNew, null);
-                lblNewInfo.Text = "替换图不可用";
-                MessageBox.Show(this, ex.Message, "替换图错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                lblNewInfo.Text = Locale.T("replacementUnavailable");
+                MessageBox.Show(this, ex.Message, Locale.IsChinese ? "替换图错误" : "Replacement error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -838,12 +1059,12 @@ public sealed class MainForm : Form
         List<PatchItem> items = new List<PatchItem>();
         if (selectedAssets.Count == 0 || replacementOriginalBytes == null || replacementByLength.Count == 0)
         {
-            error = "请先选择一个或多个原始资源和新 PNG。";
+            error = Locale.IsChinese ? "请先选择一个或多个原始资源和新 PNG。" : "Please select resources and a new PNG first.";
             return null;
         }
         if (!SelectionIsSameSize())
         {
-            error = "所选原始资源尺寸不一致，无法批量替换。";
+            error = Locale.IsChinese ? "所选原始资源尺寸不一致，无法批量替换。" : "Selected resources have different dimensions; batch replace not possible.";
             return null;
         }
 
@@ -908,14 +1129,15 @@ public sealed class MainForm : Form
     {
         if (replacementByLength.Count == 0 || selectedAssets.Count == 0 || replacementOriginalBytes == null)
         {
-            MessageBox.Show(this, "请先选择一个或多个原始资源和新 PNG。", "未准备完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this, Locale.IsChinese ? "请先选择一个或多个原始资源和新 PNG。" : "Please select resources and a new PNG first.",
+                Locale.IsChinese ? "未准备完成" : "Not ready", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
         string error;
         List<PatchItem> items = BuildPatchItems(out error);
         if (items == null)
         {
-            MessageBox.Show(this, error, "无法生成补丁", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(this, error, Locale.IsChinese ? "无法生成补丁" : "Cannot generate patch", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
         }
 
@@ -923,16 +1145,16 @@ public sealed class MainForm : Form
         string suggested = Path.Combine(Path.GetDirectoryName(source), "Resolve.patched.exe");
         using (SaveFileDialog dlg = new SaveFileDialog())
         {
-            dlg.Title = "保存精确补丁副本";
+            dlg.Title = Locale.IsChinese ? "保存精确补丁副本" : "Save patched copy";
             dlg.Filter = "可执行文件|*.exe";
             dlg.FileName = suggested;
             if (dlg.ShowDialog(this) != DialogResult.OK) return;
             try
             {
-                SetBusy(true, "正在生成补丁副本...");
+                SetBusy(true, Locale.IsChinese ? "正在生成补丁副本..." : "Generating patched copy...");
                 PatchResult result = Patcher.CreatePatchedCopy(source, dlg.FileName, items, chkClearSignature.Checked, out error);
                 if (result == null) throw new Exception(error);
-                Log("补丁生成成功: " + result.OutputPath);
+                Log((Locale.IsChinese ? "补丁生成成功: " : "Patch generated: ") + result.OutputPath);
                 for (int i = 0; i < result.VerificationMessages.Count; i++) Log("  " + result.VerificationMessages[i]);
                 Log("  SHA-256: " + result.OutputSha256);
                 Log("  清单: " + result.ManifestPath);
@@ -943,17 +1165,17 @@ public sealed class MainForm : Form
                         "\r\n文件长度: " + result.OutputSize.ToString("N0", CultureInfo.InvariantCulture) +
                         "\r\nPE Checksum: 0x" + result.OriginalPeChecksum.ToString("X8") + " -> 0x" + result.PatchedPeChecksum.ToString("X8") +
                         "\r\n\r\n输出:\r\n" + result.OutputPath,
-                        "生成完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        Locale.IsChinese ? "生成完成" : "Generation complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
             catch (Exception ex)
             {
-                Log("生成补丁失败: " + ex.Message);
-                MessageBox.Show(this, ex.Message, "生成失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Log((Locale.IsChinese ? "生成补丁失败: " : "Patch generation failed: ") + ex.Message);
+                MessageBox.Show(this, ex.Message, Locale.IsChinese ? "生成失败" : "Generation failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
-                SetBusy(false, "就绪");
+                SetBusy(false, Locale.T("readyStatus"));
                 UpdateButtons();
             }
         }
@@ -969,30 +1191,30 @@ public sealed class MainForm : Form
         }
         if (MessageBox.Show(this,
             "将直接修改:\r\n" + source +
-            "\r\n\r\n首次应用会创建 " + Path.GetFileName(source) + ".original.bak。\r\n程序目录通常需要以管理员身份运行本工具。\r\n\r\n继续吗？",
+            "\r\n\r\n首次应用会创建备份到工具根目录 backup 文件夹。\r\n程序目录通常需要以管理员身份运行本工具。\r\n\r\n继续吗？",
             "确认应用到 Resolve.exe", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
 
         string error;
         List<PatchItem> items = BuildPatchItems(out error);
         if (items == null)
         {
-            MessageBox.Show(this, error, "无法应用补丁", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(this, error, Locale.IsChinese ? "无法应用补丁" : "Cannot apply patch", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
         }
 
         string temp = source + ".patch.tmp";
-        string backup = source + ".original.bak";
+        string backup = GetBackupPath();
         try
         {
-            SetBusy(true, "正在生成并验证补丁...");
+            SetBusy(true, Locale.IsChinese ? "正在生成并验证补丁..." : "Generating and verifying patch...");
             if (!File.Exists(backup))
             {
-                Log("创建原始备份: " + backup);
+                Log((Locale.IsChinese ? "创建原始备份: " : "Creating backup: ") + backup);
                 File.Copy(source, backup, false);
             }
             else
             {
-                Log("保留已有原始备份: " + backup);
+                Log((Locale.IsChinese ? "保留已有原始备份: " : "Keeping existing backup: ") + backup);
             }
 
             if (File.Exists(temp)) File.Delete(temp);
@@ -1007,12 +1229,12 @@ public sealed class MainForm : Form
                 if (File.Exists(targetManifest)) File.Delete(targetManifest);
                 File.Move(manifest, targetManifest);
             }
-            Log("已应用到 Resolve.exe。");
+            Log((Locale.IsChinese ? "已应用到 Resolve.exe。" : "Applied to Resolve.exe."));
             for (int i = 0; i < result.VerificationMessages.Count; i++) Log("  " + result.VerificationMessages[i]);
             Log("  PE Checksum: 0x" + result.OriginalPeChecksum.ToString("X8") + " -> 0x" + result.PatchedPeChecksum.ToString("X8"));
             MessageBox.Show(this,
-                "替换已应用。\r\n\r\n请完全退出所有 Resolve 进程后重新启动。\r\n如需还原，请点击“恢复原始备份”。",
-                "应用完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                "替换已应用。\r\n\r\n请完全退出所有 Resolve 进程后重新启动。\r\n如需还原，请点击[恢复原始备份]。",
+                Locale.IsChinese ? "应用完成" : "Applied", MessageBoxButtons.OK, MessageBoxIcon.Information);
             suppressSelectionEvent = true;
             lvAssets.SelectedItems.Clear();
             suppressSelectionEvent = false;
@@ -1020,24 +1242,24 @@ public sealed class MainForm : Form
             selectedOriginalBytes = null;
             selectedAssets.Clear();
             ClearReplacement();
-            Log("列表仍保留原扫描信息；如需复核可再次点击“扫描”。");
+            Log((Locale.IsChinese ? "列表仍保留原扫描信息；如需复核可再次点击[扫描]。" : "Scan results retained; click Scan to re-verify."));
         }
         catch (UnauthorizedAccessException ex)
         {
-            Log("应用失败: " + ex.Message);
+            Log((Locale.IsChinese ? "应用失败: " : "Apply failed: ") + ex.Message);
             MessageBox.Show(this,
-                "没有权限写入 Resolve 安装目录。\r\n\r\n请右键以管理员身份运行本工具，或先使用“生成补丁副本”再手动替换。\r\n\r\n" + ex.Message,
-                "需要管理员权限", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                "没有权限写入 Resolve 安装目录。\r\n\r\n请右键以管理员身份运行本工具，或先使用[生成补丁副本]再手动替换。\r\n\r\n" + ex.Message,
+                Locale.IsChinese ? "需要管理员权限" : "Admin required", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         catch (Exception ex)
         {
-            Log("应用失败: " + ex.Message);
-            MessageBox.Show(this, ex.Message, "应用失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Log((Locale.IsChinese ? "应用失败: " : "Apply failed: ") + ex.Message);
+            MessageBox.Show(this, ex.Message, Locale.IsChinese ? "应用失败" : "Apply failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         finally
         {
             try { if (File.Exists(temp)) File.Delete(temp); } catch { }
-            SetBusy(false, "就绪");
+            SetBusy(false, Locale.T("readyStatus"));
             UpdateButtons();
         }
     }
@@ -1045,26 +1267,29 @@ public sealed class MainForm : Form
     private void RestoreBackup()
     {
         string source = txtExe.Text.Trim().Trim('"');
-        string backup = source + ".original.bak";
+        string backup = GetBackupPath();
         if (!File.Exists(backup))
         {
-            MessageBox.Show(this, "找不到原始备份:\r\n" + backup, "无法恢复", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, "找不到原始备份:\r\n" + backup, Locale.IsChinese ? "无法恢复" : "Cannot restore", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
         if (Patcher.IsProcessRunning("Resolve"))
         {
-            MessageBox.Show(this, "请先完全退出 DaVinci Resolve。", "Resolve 正在运行", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, Locale.IsChinese ? "请先完全退出 DaVinci Resolve。" : "Please exit DaVinci Resolve first.",
+                "Resolve " + (Locale.IsChinese ? "正在运行" : "is running"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
-        if (MessageBox.Show(this, "将用原始备份覆盖当前 Resolve.exe。\r\n\r\n继续吗？", "确认恢复", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+        if (MessageBox.Show(this, Locale.IsChinese ? "将用原始备份覆盖当前 Resolve.exe。\r\n\r\n继续吗？" : "This will overwrite current Resolve.exe with the backup.\r\n\r\nContinue?",
+            Locale.IsChinese ? "确认恢复" : "Confirm restore", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
         string temp = source + ".restore.tmp";
         try
         {
-            SetBusy(true, "正在恢复...");
+            SetBusy(true, Locale.IsChinese ? "正在恢复..." : "Restoring...");
             File.Copy(backup, temp, true);
             File.Replace(temp, source, null);
-            Log("已从备份恢复 Resolve.exe: " + backup);
-            MessageBox.Show(this, "已恢复原始 Resolve.exe。", "恢复完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            Log((Locale.IsChinese ? "已从备份恢复 Resolve.exe: " : "Restored from backup: ") + backup);
+            MessageBox.Show(this, Locale.IsChinese ? "已恢复原始 Resolve.exe。" : "Original Resolve.exe restored.",
+                Locale.IsChinese ? "恢复完成" : "Restore complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
             allAssets.Clear();
             currentPe = null;
             selectedAsset = null;
@@ -1073,18 +1298,51 @@ public sealed class MainForm : Form
         }
         catch (UnauthorizedAccessException ex)
         {
-            MessageBox.Show(this, "没有权限恢复，请以管理员身份运行。\r\n\r\n" + ex.Message, "需要管理员权限", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(this, "没有权限恢复，请以管理员身份运行。\r\n\r\n" + ex.Message,
+                Locale.IsChinese ? "需要管理员权限" : "Admin required", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, ex.Message, "恢复失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(this, ex.Message, Locale.IsChinese ? "恢复失败" : "Restore failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         finally
         {
             try { if (File.Exists(temp)) File.Delete(temp); } catch { }
-            SetBusy(false, "就绪");
+            SetBusy(false, Locale.T("readyStatus"));
             UpdateButtons();
         }
+    }
+
+    private void RefreshUILanguage()
+    {
+        Text = Locale.T("title");
+        btnBrowse.Text = Locale.T("btnBrowse");
+        btnScan.Text = Locale.T("btnScan");
+        lblFilter.Text = Locale.T("filter");
+        lblMin.Text = Locale.T("minSide");
+        chkSplashOnly.Text = Locale.T("chkSplashOnly");
+        chkLogoOnly.Text = Locale.T("chkLogoOnly");
+        btnSelectSameSize.Text = Locale.T("btnSelectSameSize");
+        hint.Text = Locale.T("hint");
+        lvAssets.Columns[0].Text = Locale.T("colIndex");
+        lvAssets.Columns[1].Text = Locale.T("colSize");
+        lvAssets.Columns[2].Text = Locale.T("colBytes");
+        lvAssets.Columns[3].Text = Locale.T("colOffset");
+        lvAssets.Columns[4].Text = Locale.T("colColor");
+        lvAssets.Columns[5].Text = Locale.T("colJudgement");
+        gbOriginal.Text = Locale.T("gbOriginal");
+        gbNew.Text = Locale.T("gbNew");
+        lblOriginalInfo.Text = Locale.T("lblOriginalInfo");
+        btnChooseReplacement.Text = Locale.T("btnChooseReplacement");
+        btnExportOriginal.Text = Locale.T("btnExportOriginal");
+        lblNewInfo.Text = Locale.T("lblNewInfo");
+        gbLog.Text = Locale.T("gbLog");
+        chkPatchCopies.Text = Locale.T("chkPatchCopies");
+        chkClearSignature.Text = Locale.T("chkClearSignature");
+        btnCreatePatch.Text = Locale.T("btnCreatePatch");
+        btnApply.Text = Locale.T("btnApply");
+        btnRestore.Text = Locale.T("btnRestore");
+        ApplyFilter();
     }
 }
 
