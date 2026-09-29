@@ -1,6 +1,6 @@
-# DaVinci Resolve Splash 达芬奇启动界面替换器 使用说明
+# DaVinci Resolve Splash changer 达芬奇启动界面替换器 使用说明
 
-Resolve Splash Studio 是一个 Windows 原生 GUI 工具，用于从 DaVinci Resolve 的 `Resolve.exe` 中定位内嵌 PNG 启动图。
+Resolve Splash changer是一个 Windows 原生 GUI 工具，用于从 DaVinci Resolve 的 `Resolve.exe` 中定位内嵌 PNG 启动图。
 ⚠本项目使用了AI进行构建
 
 ![描述](assets/测试图.png)
